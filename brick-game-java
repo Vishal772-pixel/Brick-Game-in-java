@@ -1,0 +1,121 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.Random;
+
+public class BrickGame extends JPanel implements ActionListener, KeyListener {
+    private int leftBase = 900, rightBase = 900, middleBase = 900;
+    private int score = 0;
+    private int[] leftColors = new int[6];
+    private int[] rightColors = new int[6];
+    private int[] midColors = new int[6];
+    private int leftIndex = 0, rightIndex = 0, midIndex = 0;
+    private final int BOX_WIDTH = 200, BOX_HEIGHT = 100;
+    private Random rand = new Random();
+    private Timer timer;
+
+    public BrickGame() {
+        this.setPreferredSize(new Dimension(1200, 800));
+        this.setBackground(Color.WHITE);
+        this.setFocusable(true);
+        this.addKeyListener(this);
+        timer = new Timer(200, this);
+        timer.start();
+    }
+
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        drawOutline(g);
+        drawBoxes(g);
+        drawScore(g);
+    }
+
+    private void drawOutline(Graphics g) {
+        g.drawRect(700, 300, 300, 600);
+        g.drawLine(800, 300, 800, 900);
+        g.drawLine(900, 300, 900, 900);
+        for (int u = 300; u <= 900; u += 100) {
+            g.drawLine(700, u, 1000, u);
+        }
+        g.drawString("FOR MOVE LEFT PRESS 'l'", 20, 100);
+        g.drawString("FOR MOVE RIGHT PRESS 'r'", 20, 200);
+        g.drawString("FOR MOVE MIDDLE PRESS 'm'", 20, 300);
+    }
+
+    private void drawBoxes(Graphics g) {
+        drawBox(g, 800, 50, leftBase, leftColors, leftIndex, Color.BLACK);
+        drawBox(g, 900, 50, rightBase, rightColors, rightIndex, Color.BLACK);
+        drawBox(g, 850, middleBase, middleBase, midColors, midIndex, Color.BLACK);
+    }
+
+    private void drawBox(Graphics g, int x, int y, int base, int[] colors, int index, Color defaultColor) {
+        if (base > 300) {
+            g.setColor(new Color(rand.nextInt(256), rand.nextInt(256), rand.nextInt(256)));
+            g.fillRect(x, base - BOX_HEIGHT, BOX_WIDTH, BOX_HEIGHT);
+            g.setColor(Color.BLACK);
+            g.drawRect(x, base - BOX_HEIGHT, BOX_WIDTH, BOX_HEIGHT);
+            if (index < colors.length) {
+                colors[index] = g.getColor().getRGB();
+                index++;
+            }
+        }
+    }
+
+    private void drawScore(Graphics g) {
+        g.drawString("SCORE: " + score, 100, 600);
+    }
+
+    public void actionPerformed(ActionEvent e) {
+        repaint();
+    }
+
+    public void keyPressed(KeyEvent e) {
+        char key = e.getKeyChar();
+        int color = rand.nextInt(256);
+
+        if (key == 'l') {
+            if (leftBase > 300) {
+                leftBase -= 100;
+                handleMatch(leftColors, leftIndex);
+                leftIndex++;
+            }
+        } else if (key == 'r') {
+            if (rightBase > 300) {
+                rightBase -= 100;
+                handleMatch(rightColors, rightIndex);
+                rightIndex++;
+            }
+        } else if (key == 'm') {
+            if (middleBase > 300) {
+                middleBase -= 100;
+                handleMatch(midColors, midIndex);
+                midIndex++;
+            }
+        }
+
+        if (leftBase < 400 || rightBase < 400 || middleBase < 400) {
+            timer.stop();
+            JOptionPane.showMessageDialog(this, "Game Over! Final Score: " + score);
+            System.exit(0);
+        }
+    }
+
+    private void handleMatch(int[] colors, int index) {
+        if (index >= 1 && colors[index] == colors[index - 1]) {
+            score += 10;
+            colors[index - 1] = 0; // Reset matched color
+        }
+    }
+
+    public void keyReleased(KeyEvent e) {}
+    public void keyTyped(KeyEvent e) {}
+
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("Brick Game");
+        BrickGame gamePanel = new BrickGame();
+        frame.add(gamePanel);
+        frame.pack();
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setVisible(true);
+    }
+}
